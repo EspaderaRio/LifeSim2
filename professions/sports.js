@@ -193,3 +193,120 @@ function openMatchTab(sport) {
     updateStats();
   };
 }
+// ===================== ATHLETE / SPORTS SYSTEM ===================== //
+
+// Initialize sport-related player data
+if (!player.sportType) player.sportType = null;
+if (!player.sportSkill) player.sportSkill = 0;
+if (!player.stamina) player.stamina = 100;
+if (!player.stats) player.stats = { points: 0, assists: 0, rebounds: 0 };
+
+let currentSportActive = player.subProfession || null;
+
+// ===================== OPEN SPORTS TAB ===================== //
+function openAthleteTrainingTab() {
+  if (!currentSportActive) return alert("Please select a sport first!");
+
+  const stats = player.sportsSkills[currentSportActive];
+  const modal = document.createElement("div");
+  modal.className = "modal-overlay";
+
+  modal.innerHTML = `
+    <div class="modal-content sport-modal">
+      <span class="close">&times;</span>
+      <h2>🏀 Athlete Training (${capitalize(currentSportActive)})</h2>
+
+      <div class="hud-sports">
+        <div class="hud-bar-sports">
+          <span>Skill (${Math.floor((stats.strength + stats.endurance + stats.skill)/3)})</span>
+          <div class="bar-sports"><div class="fill" id="skill-fill"></div></div>
+        </div>
+        <div class="hud-bar-sports">
+          <span>Stamina (${player.stamina})</span>
+          <div class="bar-sports"><div class="fill" id="stamina-fill"></div></div>
+        </div>
+      </div>
+
+      <div class="actions-sports">
+        <button id="train-btn">🏋️ Train</button>
+        <button id="simulate-btn">🏆 Play Game</button>
+      </div>
+
+      <div id="sport-log" class="scroll-box"></div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+
+  modal.querySelector(".close").onclick = () => modal.remove();
+  modal.querySelector("#train-btn").onclick = () => trainSport(stats);
+  modal.querySelector("#simulate-btn").onclick = () => simulateSportGame(stats);
+
+  updateSportBars(stats);
+}
+
+
+// ===================== TRAINING ===================== //
+function trainSport(stats) {
+  const gain = Math.floor(Math.random() * 3) + 1;
+
+  // Randomly improve one stat
+  const rand = Math.random();
+  if (rand < 0.33) stats.strength += gain;
+  else if (rand < 0.66) stats.endurance += gain;
+  else stats.skill += gain;
+
+  player.stamina = Math.max(0, player.stamina - 5);
+
+  logSport(`You trained hard and improved your skill by ${gain} points!`);
+  updateSportBars(stats);
+}
+
+// ===================== SIMULATE GAME ===================== //
+function simulateSportGame() {
+  const log = document.getElementById("sport-log");
+  log.innerHTML = "🏀 Simulating game...<br>";
+
+  const playerScore = Math.floor(Math.random() * (player.sportSkill / 2 + 10));
+  const opponentScore = Math.floor(Math.random() * 40 + 20);
+
+  const result = playerScore > opponentScore ? "won" : "lost";
+
+  player.stats.points = playerScore;
+  player.happiness += result === "won" ? 10 : 3;
+  player.reputation += result === "won" ? 5 : 1;
+  player.stamina = Math.max(0, player.stamina - 10);
+
+  log.innerHTML += `<br>You scored ${playerScore} points and ${result} the game!`;
+
+  // ✅ Pass the correct stats object
+  updateSportBars({
+    strength: player.strength || 0,
+    endurance: player.endurance || 0,
+    skill: player.sportSkill || 0
+  });
+}
+
+// ===================== UTILITIES ===================== //
+function logSport(text) {
+  const log = document.getElementById("sport-log");
+  if (log) log.innerHTML += `<br>${text}`;
+}
+
+function updateSportBars(stats) {
+  const skillFill = document.getElementById("skill-fill");
+  const staminaFill = document.getElementById("stamina-fill");
+
+  const totalSkill = Math.floor((stats.strength + stats.endurance + stats.skill) / 3);
+
+  if (skillFill) skillFill.style.width = `${totalSkill}%`;
+  if (staminaFill) staminaFill.style.width = `${player.stamina}%`;
+}
+
+// ===================== OPTIONAL AUTOLOAD ===================== //
+window.addEventListener("load", () => {
+  const sportBar = document.getElementById("sport-fill");
+  if (sportBar) sportBar.style.width = `${player.sportSkill}%`;
+});
+
+
+
