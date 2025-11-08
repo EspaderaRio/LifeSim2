@@ -152,3 +152,35 @@ function updateSportHUD() {
   sportFill.style.width = `${percent}%`;
   sportLabel.textContent = `SKILLS (${player.chosenSport || "None"})`;
 }
+
+/* ============================================================
+HEALTH PROGRAMS
+============================================================ */
+function applyYearlyHealthAndExpenses() {
+  const gymCost = player.gymMembership ? 2000 : 0;
+  const dietCost = player.dietPlan ? 1500 : 0;
+  const totalCost = gymCost + dietCost;
+
+  if (player.money >= totalCost) {
+    player.money -= totalCost;
+  } else {
+    showToast("Not enough money to maintain gym/diet! Benefits removed.");
+    player.gymMembership = false;
+    player.dietPlan = false;
+  }
+
+  // Apply health effects
+  if (player.gymMembership) player.health = Math.min(player.health + 5, 100);
+  if (player.dietPlan) player.health = Math.min(player.health + 3, 100);
+
+  updateStats();
+
+  // If the expenses modal is open, refresh it
+  const existingModal = document.querySelector(".modal-overlay");
+  if (existingModal) {
+    existingModal.remove();
+    openExpensesModal();
+  }
+}
+
+
